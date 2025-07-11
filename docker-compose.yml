@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: calendar_db
+    environment:
+      POSTGRES_DB: calendar_db
+      POSTGRES_USER: calendar_user
+      POSTGRES_PASSWORD: calendar_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db_init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calendar_user -d calendar_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for WebSocket/Channels
+  redis:
+    image: redis:7-alpine
+    container_name: calendar_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Backend Django (только для полной разработки)
+  # backend:
+  #   build: ./backend
+  #   container_name: calendar_backend
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DEBUG=1
+  #     - DB_NAME=calendar_db
+  #     - DB_USER=calendar_user
+  #     - DB_PASSWORD=calendar_password
+  #     - DB_HOST=db
+  #     - DB_PORT=5432
+  #     - REDIS_URL=redis://redis:6379/0
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./backend:/app
+  #   command: >
+  #     sh -c "python manage.py migrate &&
+  #            python manage.py collectstatic --noinput &&
+  #            python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  postgres_data:
+  redis_data:
