@@ -3,7 +3,7 @@ Django==4.2.7
 djangorestframework==3.14.0
 
 # Database
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 # WebSocket support
 channels==4.0.0
 channels-redis==4.1.0
