@@ -1,0 +1,32 @@
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  margin-bottom: 20px;
+}
+
+.category-demo {
+  margin-top: 20px;
+}
+
+// Category colors based on our fixed categories (Cat 1, Cat 2, Cat 3)
+.category-cat1 {
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+  border: 1px solid #2196f3 !important;
+}
+
+.category-cat2 {
+  background-color: #e8f5e8 !important;
+  color: #388e3c !important;
+  border: 1px solid #4caf50 !important;
+}
+
+.category-cat3 {
+  background-color: #fff3e0 !important;
+  color: #f57c00 !important;
+  border: 1px solid #ff9800 !important;
+}

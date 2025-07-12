@@ -1,0 +1,37 @@
+<mat-toolbar color="primary">
+  <span>Calendar Event Booking</span>
+</mat-toolbar>
+
+<div class="container">
+  <mat-card class="welcome-card">
+    <mat-card-header>
+      <mat-card-title>🎯 Frontend Setup Complete!</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>✅ Angular проект создан</p>
+      <p>✅ Angular Material установлен и настроен</p>
+      <p>✅ Material модули импортированы</p>
+      <p>✅ HTTP Client настроен</p>
+      <p>✅ Сервисы созданы</p>
+      <p>✅ Базовая структура готова</p>
+      
+      <div class="category-demo">
+        <h3>Тест категорий (Cat 1, Cat 2, Cat 3):</h3>
+        <mat-chip-set>
+          <mat-chip class="category-cat1" selected>Cat 1</mat-chip>
+          <mat-chip class="category-cat2" selected>Cat 2</mat-chip>
+          <mat-chip class="category-cat3" selected>Cat 3</mat-chip>
+        </mat-chip-set>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary">
+        <mat-icon>calendar_today</mat-icon>
+        Test Button
+      </button>
+      <button mat-button>Secondary Action</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<router-outlet></router-outlet>

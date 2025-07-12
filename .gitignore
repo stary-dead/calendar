@@ -8,6 +8,17 @@ TASK.md
 *.log
 debug.log
 
+# Environment and configuration files
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+*.env
+config/local.py
+config/production.py
+secrets.json
+
 # =============================================================================
 # PYTHON / DJANGO
 # =============================================================================
