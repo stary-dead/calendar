@@ -1,83 +1,87 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
 
-class EventCategory(models.TextChoices):
+class Category(models.Model):
     """Fixed event categories as specified in requirements"""
-    CAT_1 = 'cat_1', 'Cat 1'
-    CAT_2 = 'cat_2', 'Cat 2'
-    CAT_3 = 'cat_3', 'Cat 3'
-
-
-class Event(models.Model):
-    """Event model for calendar slots"""
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    category = models.CharField(
+    CAT_1 = 'Cat 1'
+    CAT_2 = 'Cat 2'
+    CAT_3 = 'Cat 3'
+    
+    CATEGORY_CHOICES = [
+        (CAT_1, 'Cat 1'),
+        (CAT_2, 'Cat 2'),
+        (CAT_3, 'Cat 3'),
+    ]
+    
+    name = models.CharField(
         max_length=10,
-        choices=EventCategory.choices,
-        default=EventCategory.CAT_1
+        choices=CATEGORY_CHOICES,
+        unique=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+class TimeSlot(models.Model):
+    """Time slots for event booking"""
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name='time_slots'
     )
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    max_participants = models.PositiveIntegerField(
-        default=1,
-        validators=[MinValueValidator(1), MaxValueValidator(100)]
-    )
     created_by = models.ForeignKey(
-        User, 
+        User,
         on_delete=models.CASCADE,
-        related_name='created_events'
+        related_name='created_time_slots'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
-
+    
     class Meta:
         ordering = ['start_time']
         indexes = [
             models.Index(fields=['start_time', 'end_time']),
             models.Index(fields=['category']),
-            models.Index(fields=['is_active']),
         ]
-
-    def __str__(self):
-        return f"{self.title} ({self.category}) - {self.start_time.strftime('%Y-%m-%d %H:%M')}"
-
-    @property
-    def available_slots(self):
-        """Return number of available booking slots"""
-        from bookings.models import Booking
-        booked_count = Booking.objects.filter(
-            event=self, 
-            status='confirmed'
-        ).count()
-        return max(0, self.max_participants - booked_count)
-
-    @property
-    def is_fully_booked(self):
-        """Check if event is fully booked"""
-        return self.available_slots == 0
-
+    
     def clean(self):
-        """Validate event data"""
-        from django.core.exceptions import ValidationError
-        
+        """Validate time slot data"""
         if self.start_time and self.end_time:
             if self.start_time >= self.end_time:
-                raise ValidationError("End time must be after start time")
+                raise ValidationError("Start time must be before end time")
             
-            # Check for overlapping events (same time slot, same category)
-            overlapping = Event.objects.filter(
+            # Check for overlapping slots in the same category
+            overlapping = TimeSlot.objects.filter(
                 category=self.category,
                 start_time__lt=self.end_time,
-                end_time__gt=self.start_time,
-                is_active=True
+                end_time__gt=self.start_time
             ).exclude(pk=self.pk)
             
             if overlapping.exists():
-                raise ValidationError(
-                    f"An event with category {self.get_category_display()} "
-                    "already exists in this time slot"
-                )
+                raise ValidationError("Time slot overlaps with existing slot in the same category")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_available(self):
+        """Check if time slot is available for booking"""
+        return not hasattr(self, 'booking')
+    
+    @property
+    def duration_minutes(self):
+        """Return duration in minutes"""
+        return int((self.end_time - self.start_time).total_seconds() / 60)
+    
+    def __str__(self):
+        return f"{self.category.name} - {self.start_time.strftime('%Y-%m-%d %H:%M')} to {self.end_time.strftime('%H:%M')}"
