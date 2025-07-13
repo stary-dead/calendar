@@ -2,6 +2,9 @@
 Django==4.2.7
 djangorestframework==3.14.0
 
+# OAuth & Social Authentication
+django-allauth==0.57.0
+
 # Database
 psycopg2-binary==2.9.10
 # WebSocket support

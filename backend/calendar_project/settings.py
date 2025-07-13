@@ -38,11 +38,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',  # Required for allauth
     
     # Third party apps
     'rest_framework',
     'corsheaders',
     'channels',
+    
+    # OAuth & Social Authentication
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
     
     # Local apps
     'users',
@@ -57,6 +65,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # OAuth middleware
     'users.middleware.AdminRequiredMiddleware',  # Наш middleware для админских прав
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -212,4 +221,53 @@ SESSION_SAVE_EVERY_REQUEST = False
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
+# Site ID for django.contrib.sites
+SITE_ID = 1
+
+# Django Allauth Configuration
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Simplified for MVP
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
+
+# Redirect URLs for OAuth
+LOGIN_REDIRECT_URL = '/oauth/callback/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# OAuth Provider Settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    },
+    'github': {
+        'SCOPE': [
+            'user:email',
+        ],
+    }
+}
+
+# OAuth credentials from environment
+SOCIALACCOUNT_PROVIDERS['google']['APP'] = {
+    'client_id': config('GOOGLE_OAUTH_CLIENT_ID', default=''),
+    'secret': config('GOOGLE_OAUTH_CLIENT_SECRET', default=''),
+    'key': ''
+}
+
+SOCIALACCOUNT_PROVIDERS['github']['APP'] = {
+    'client_id': config('GITHUB_OAUTH_CLIENT_ID', default=''),
+    'secret': config('GITHUB_OAUTH_CLIENT_SECRET', default=''),
+}
