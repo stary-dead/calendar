@@ -49,3 +49,16 @@ def create_user_preferences(sender, instance, created, **kwargs):
     """Automatically create user preferences when user is created"""
     if created:
         UserPreference.objects.create(user=instance)
+
+
+@receiver(post_save, sender=UserPreference)
+def log_preference_change(sender, instance, created, **kwargs):
+    """Log when user preferences are changed"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if created:
+        logger.info(f"User preferences created for {instance.user.username}")
+    else:
+        categories = instance.selected_categories
+        logger.info(f"User preferences updated for {instance.user.username}: {categories}")

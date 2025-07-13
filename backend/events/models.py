@@ -55,9 +55,16 @@ class TimeSlot(models.Model):
     
     def clean(self):
         """Validate time slot data"""
+        from django.utils import timezone
+        
         if self.start_time and self.end_time:
+            # Check time order
             if self.start_time >= self.end_time:
                 raise ValidationError("Start time must be before end time")
+            
+            # Check if slot is not in the past (only for new slots)
+            if not self.pk and self.start_time < timezone.now():
+                raise ValidationError("Cannot create time slots in the past")
             
             # Check for overlapping slots in the same category
             overlapping = TimeSlot.objects.filter(
@@ -68,6 +75,11 @@ class TimeSlot(models.Model):
             
             if overlapping.exists():
                 raise ValidationError("Time slot overlaps with existing slot in the same category")
+            
+            # Check minimum duration (15 minutes)
+            duration = self.end_time - self.start_time
+            if duration.total_seconds() < 900:  # 15 minutes
+                raise ValidationError("Time slot must be at least 15 minutes long")
     
     def save(self, *args, **kwargs):
         self.clean()
@@ -76,7 +88,47 @@ class TimeSlot(models.Model):
     @property
     def is_available(self):
         """Check if time slot is available for booking"""
+        from django.utils import timezone
+        
+        # Check if in the past
+        if self.start_time < timezone.now():
+            return False
+        
+        # Check if already booked
         return not hasattr(self, 'booking')
+    
+    def is_available_for_user(self, user):
+        """Check if time slot is available for specific user"""
+        from django.utils import timezone
+        
+        # Check if in the past
+        if self.start_time < timezone.now():
+            return False, "Time slot is in the past"
+        
+        # Check if already booked
+        if hasattr(self, 'booking'):
+            if self.booking.user == user:
+                return False, "You have already booked this slot"
+            else:
+                return False, "This slot is already booked by another user"
+        
+        # Check if user has conflicting bookings
+        from bookings.models import Booking
+        conflicts = Booking.objects.filter(
+            user=user,
+            time_slot__start_time__lt=self.end_time,
+            time_slot__end_time__gt=self.start_time
+        )
+        if conflicts.exists():
+            return False, "You have a conflicting booking at this time"
+        
+        return True, "Available"
+    
+    def get_booking_user(self):
+        """Get the user who booked this slot, if any"""
+        if hasattr(self, 'booking'):
+            return self.booking.user
+        return None
     
     @property
     def duration_minutes(self):
