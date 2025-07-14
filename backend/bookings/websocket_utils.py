@@ -19,12 +19,11 @@ def send_booking_created_event(booking):
         },
         'timeslot': {
             'id': booking.time_slot.id,
-            'date': booking.time_slot.date.isoformat(),
-            'start_time': booking.time_slot.start_time.strftime('%H:%M'),
-            'end_time': booking.time_slot.end_time.strftime('%H:%M'),
+            'start_time': booking.time_slot.start_time.isoformat(),
+            'end_time': booking.time_slot.end_time.isoformat(),
             'category': booking.time_slot.category.name,
         },
-        'created_at': booking.created_at.isoformat(),
+        'created_at': booking.booked_at.isoformat(),
     }
     
     # Отправляем событие всем подключенным клиентам
@@ -63,9 +62,8 @@ def send_timeslot_created_event(timeslot):
     # Подготавливаем данные для отправки
     timeslot_data = {
         'id': timeslot.id,
-        'date': timeslot.date.isoformat(),
-        'start_time': timeslot.start_time.strftime('%H:%M'),
-        'end_time': timeslot.end_time.strftime('%H:%M'),
+        'start_time': timeslot.start_time.isoformat(),
+        'end_time': timeslot.end_time.isoformat(),
         'category': timeslot.category.name,
         'is_available': True,  # Новый слот всегда доступен
         'created_at': timeslot.created_at.isoformat(),
@@ -90,9 +88,8 @@ def send_timeslot_deleted_event(timeslot):
     # Подготавливаем данные для отправки
     timeslot_data = {
         'id': timeslot.id,
-        'date': timeslot.start_time.date().isoformat(),
-        'start_time': timeslot.start_time.strftime('%H:%M'),
-        'end_time': timeslot.end_time.strftime('%H:%M'),
+        'start_time': timeslot.start_time.isoformat(),
+        'end_time': timeslot.end_time.isoformat(),
         'category': timeslot.category.name,
         'deleted_at': datetime.now().isoformat(),
     }

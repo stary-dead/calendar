@@ -406,9 +406,8 @@ dev/
 scripts/dev_*
 
 # Test files
-test_*.py
 *_test.py
-
+API_DOCUMENTATION.md
 # Local configuration
 local_config.py
 local_settings.py

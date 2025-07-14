@@ -1,6 +1,7 @@
 # Django core
 Django==4.2.7
 djangorestframework==3.14.0
+drf-spectacular==0.27.0
 
 # OAuth & Social Authentication
 django-allauth==0.57.0

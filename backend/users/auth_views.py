@@ -8,6 +8,10 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
 import json
 
 
@@ -99,28 +103,28 @@ def user_info_view(request):
 
 
 @csrf_exempt
-@require_http_methods(["POST"])
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def register_view(request):
     """
     User registration endpoint (for testing purposes)
     """
     try:
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        email = data.get('email', '')
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email', '')
         
         if not username or not password:
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'error': 'Username and password are required'
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         if User.objects.filter(username=username).exists():
-            return JsonResponse({
+            return Response({
                 'success': False,
                 'error': 'Username already exists'
-            }, status=400)
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         user = User.objects.create_user(
             username=username,
@@ -128,10 +132,11 @@ def register_view(request):
             email=email
         )
         
-        # Auto-login after registration
+        # Auto-login after registration with explicit backend
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(request, user)
         
-        return JsonResponse({
+        return Response({
             'success': True,
             'user': {
                 'id': user.id,
@@ -142,13 +147,8 @@ def register_view(request):
             }
         })
         
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': 'Invalid JSON data'
-        }, status=400)
     except Exception as e:
-        return JsonResponse({
+        return Response({
             'success': False,
             'error': str(e)
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

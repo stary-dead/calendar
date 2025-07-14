@@ -56,7 +56,7 @@ def admin_timeslots_list_create(request):
         serializer = AdminTimeSlotCreateSerializer(data=request.data, context={'request': request})
         
         if serializer.is_valid():
-            timeslot = serializer.save()
+            timeslot = serializer.save(created_by=request.user)
             # Отправляем WebSocket событие о новом временном слоте
             send_timeslot_created_event(timeslot)
             

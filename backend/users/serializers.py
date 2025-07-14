@@ -41,9 +41,9 @@ class TimeSlotSerializer(serializers.ModelSerializer):
         model = TimeSlot
         fields = [
             'id', 'category', 'category_name', 'start_time', 'end_time',
-            'is_booked', 'booked_by', 'can_book', 'created_at'
+            'is_booked', 'booked_by', 'can_book', 'created_by', 'created_at'
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ['created_by', 'created_at']
     
     def get_is_booked(self, obj):
         """Check if time slot is booked"""
@@ -168,14 +168,15 @@ class AdminTimeSlotSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     booking_info = serializers.SerializerMethodField()
     is_booked = serializers.SerializerMethodField()
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     
     class Meta:
         model = TimeSlot
         fields = [
             'id', 'category', 'category_name', 'start_time', 'end_time',
-            'is_booked', 'booking_info', 'created_at'
+            'is_booked', 'booking_info', 'created_by', 'created_by_username', 'created_at'
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ['created_by', 'created_at']
     
     def get_is_booked(self, obj):
         """Check if time slot is booked"""

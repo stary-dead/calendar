@@ -139,7 +139,7 @@ def cancel_booking(request, booking_id):
         },
         'timeslot': {
             'id': booking.time_slot.id,
-            'date': booking.time_slot.date.isoformat(),
+            'date': booking.time_slot.start_time.date().isoformat(),
             'start_time': booking.time_slot.start_time.strftime('%H:%M'),
             'end_time': booking.time_slot.end_time.strftime('%H:%M'),
             'category': booking.time_slot.category.name,
