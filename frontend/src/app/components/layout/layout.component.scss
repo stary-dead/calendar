@@ -1,0 +1,123 @@
+.layout-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  
+  .menu-button {
+    margin-right: 16px;
+  }
+  
+  .title {
+    font-size: 18px;
+    font-weight: 500;
+  }
+  
+  .spacer {
+    flex: 1 1 auto;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .username {
+      font-size: 14px;
+      font-weight: 400;
+    }
+    
+    mat-icon {
+      font-size: 20px;
+    }
+  }
+}
+
+.sidenav-container {
+  flex: 1;
+  margin-top: 64px; // Account for fixed header
+  
+  .sidenav {
+    width: 280px;
+    background-color: #fafafa;
+    
+    .sidenav-content {
+      padding: 16px 0;
+      
+      .nav-section {
+        .nav-section-title {
+          padding: 0 16px;
+          margin: 16px 0 8px 0;
+          font-size: 14px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.6);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        a[mat-list-item] {
+          margin: 4px 8px;
+          border-radius: 8px;
+          transition: background-color 0.2s ease;
+          
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+          }
+          
+          &.active-link {
+            background-color: rgba(63, 81, 181, 0.12);
+            color: #3f51b5;
+            
+            mat-icon {
+              color: #3f51b5;
+            }
+          }
+          
+          mat-icon {
+            margin-right: 12px;
+          }
+        }
+        
+        .admin-section {
+          .section-divider {
+            margin: 16px 0;
+          }
+        }
+      }
+    }
+  }
+  
+  .main-content {
+    .content-wrapper {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .header {
+    .user-info {
+      .username {
+        display: none;
+      }
+    }
+  }
+  
+  .sidenav-container {
+    .main-content {
+      .content-wrapper {
+        padding: 16px;
+      }
+    }
+  }
+}

@@ -14,7 +14,8 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  isAdmin: boolean;
+  is_staff: boolean;
+  is_superuser: boolean;
 }
 
 export interface Booking {

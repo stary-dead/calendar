@@ -64,13 +64,15 @@ def login_view(request):
         }, status=500)
 
 
-@login_required
+@csrf_exempt
 @require_http_methods(["POST"])
 def logout_view(request):
     """
     User logout endpoint
     """
-    logout(request)
+    if request.user.is_authenticated:
+        logout(request)
+    
     return JsonResponse({
         'success': True,
         'message': 'Logged out successfully'

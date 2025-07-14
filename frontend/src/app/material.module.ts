@@ -19,6 +19,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 const MaterialModules = [
   MatButtonModule,
@@ -38,7 +41,10 @@ const MaterialModules = [
   MatChipsModule,
   MatIconModule,
   MatToolbarModule,
-  MatSidenavModule
+  MatSidenavModule,
+  MatListModule,
+  MatMenuModule,
+  MatDividerModule
 ];
 
 @NgModule({

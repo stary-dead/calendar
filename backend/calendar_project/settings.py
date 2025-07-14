@@ -195,7 +195,7 @@ CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings for API
-CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4200']
 
 # Nginx proxy settings
 USE_X_FORWARDED_HOST = True
