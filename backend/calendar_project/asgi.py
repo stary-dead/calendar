@@ -17,16 +17,16 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'calendar_project.settings')
 
 django_asgi_app = get_asgi_application()
 
-# Import routing from apps (will be created later)
-# from bookings.routing import websocket_urlpatterns
+# Import routing from apps
+from bookings.routing import websocket_urlpatterns
 
 application = ProtocolTypeRouter({
     'http': django_asgi_app,
     'websocket': AllowedHostsOriginValidator(
         AuthMiddlewareStack(
-            URLRouter([
-                # websocket_urlpatterns will be added later
-            ])
+            URLRouter(
+                websocket_urlpatterns
+            )
         )
     ),
 })

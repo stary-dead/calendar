@@ -14,6 +14,8 @@ psycopg2-binary==2.9.10
 # WebSocket support
 channels==4.0.0
 channels-redis==4.1.0
+daphne==4.0.0
+websockets==15.0.1
 
 # CORS for frontend
 django-cors-headers==4.3.1

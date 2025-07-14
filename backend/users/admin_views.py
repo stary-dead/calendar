@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch
 from events.models import TimeSlot, Category
 from bookings.models import Booking
+from bookings.websocket_utils import send_timeslot_created_event, send_booking_cancelled_event, send_timeslot_deleted_event
 from .serializers import (
     TimeSlotSerializer, 
     BookingSerializer,
@@ -56,13 +57,15 @@ def admin_timeslots_list_create(request):
         
         if serializer.is_valid():
             timeslot = serializer.save()
+            # Отправляем WebSocket событие о новом временном слоте
+            send_timeslot_created_event(timeslot)
+            
             return Response(
                 AdminTimeSlotSerializer(timeslot, context={'request': request}).data,
                 status=status.HTTP_201_CREATED
             )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAdminUser])
@@ -114,7 +117,9 @@ def admin_timeslot_detail(request, timeslot_id):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        send_timeslot_deleted_event(timeslot)
         timeslot.delete()
+        
         return Response(
             {"message": "Time slot deleted successfully"},
             status=status.HTTP_204_NO_CONTENT
@@ -171,8 +176,28 @@ def admin_cancel_booking(request, booking_id):
         id=booking_id
     )
     
+    # Подготавливаем данные для WebSocket события перед удалением
+    booking_data = {
+        'id': booking.id,
+        'timeslot_id': booking.time_slot.id,
+        'user': {
+            'id': booking.user.id,
+            'username': booking.user.username,
+        },
+        'timeslot': {
+            'id': booking.time_slot.id,
+            'date': booking.time_slot.start_time.date().isoformat(),
+            'start_time': booking.time_slot.start_time.strftime('%H:%M'),
+            'end_time': booking.time_slot.end_time.strftime('%H:%M'),
+            'category': booking.time_slot.category.name,
+        },
+    }
+    
     # Admins can cancel any booking regardless of timing rules
     booking.delete()
+    
+    # Отправляем WebSocket событие об отмене бронирования
+    send_booking_cancelled_event(booking_data)
     
     return Response(
         {"message": f"Booking {booking_id} cancelled successfully"},

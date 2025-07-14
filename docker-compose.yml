@@ -39,8 +39,8 @@ services:
   backend:
     build: ./backend
     container_name: calendar_backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       - DEBUG=1
       - DB_NAME=calendar_db
@@ -49,7 +49,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
-      - CORS_ALLOWED_ORIGINS=http://localhost:4200
+      - CORS_ALLOWED_ORIGINS=http://localhost:4200,http://localhost
     depends_on:
       db:
         condition: service_healthy
@@ -57,10 +57,24 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             python manage.py runserver 0.0.0.0:8000"
+             daphne -b 0.0.0.0 -p 8000 calendar_project.asgi:application"
+
+  # Nginx reverse proxy
+  nginx:
+    build: ./nginx
+    container_name: calendar_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
 
   # Frontend Angular
   frontend:
@@ -77,3 +91,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  static_volume:
+  media_volume:

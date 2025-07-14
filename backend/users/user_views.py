@@ -6,10 +6,12 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 
 from events.models import Category, TimeSlot
 from bookings.models import Booking
+from bookings.websocket_utils import send_booking_created_event, send_booking_cancelled_event
 from users.models import UserPreference
 from users.serializers import (
     CategorySerializer, UserPreferenceSerializer, TimeSlotSerializer,
@@ -96,6 +98,7 @@ def timeslots_list(request):
     return Response(serializer.data)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_booking(request):
@@ -103,11 +106,16 @@ def create_booking(request):
     serializer = BookingCreateSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         booking = serializer.save()
+        
+        # Отправляем WebSocket событие о новом бронировании
+        send_booking_created_event(booking)
+        
         response_serializer = UserBookingSerializer(booking)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def cancel_booking(request, booking_id):
@@ -121,7 +129,28 @@ def cancel_booking(request, booking_id):
             status=status.HTTP_400_BAD_REQUEST
         )
     
+    # Подготавливаем данные для WebSocket события перед удалением
+    booking_data = {
+        'id': booking.id,
+        'timeslot_id': booking.time_slot.id,
+        'user': {
+            'id': booking.user.id,
+            'username': booking.user.username,
+        },
+        'timeslot': {
+            'id': booking.time_slot.id,
+            'date': booking.time_slot.date.isoformat(),
+            'start_time': booking.time_slot.start_time.strftime('%H:%M'),
+            'end_time': booking.time_slot.end_time.strftime('%H:%M'),
+            'category': booking.time_slot.category.name,
+        },
+    }
+    
     booking.delete()
+    
+    # Отправляем WebSocket событие об отмене бронирования
+    send_booking_cancelled_event(booking_data)
+    
     return Response({'message': 'Booking cancelled successfully'})
 
 
