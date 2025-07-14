@@ -4,9 +4,13 @@ djangorestframework==3.14.0
 
 # OAuth & Social Authentication
 django-allauth==0.57.0
+requests==2.32.4
+PyJWT==2.10.1
+cryptography==45.0.5
 
 # Database
 psycopg2-binary==2.9.10
+
 # WebSocket support
 channels==4.0.0
 channels-redis==4.1.0

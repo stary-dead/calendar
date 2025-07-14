@@ -228,11 +228,10 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 
 # Django Allauth Configuration
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Simplified for MVP
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_ADAPTER = 'users.adapters.CustomAccountAdapter'
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']  # Updated format
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
