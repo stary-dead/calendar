@@ -21,6 +21,8 @@ interface UserInfoResponse {
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private authCheckComplete = new BehaviorSubject<boolean>(false);
+  public authCheckComplete$ = this.authCheckComplete.asObservable();
 
   constructor(private http: HttpClient) {
     // Check if user is already logged in on service initialization
@@ -31,7 +33,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login/`, {
       username,
       password
-    }).pipe(
+    }, { withCredentials: true }).pipe(
       tap(response => {
         if (response.success && response.user) {
           this.setCurrentUser(response.user);
@@ -47,9 +49,27 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/api/auth/logout/`, {}).pipe(
+    return this.http.post<void>(`${environment.apiUrl}/api/auth/logout/`, {}, { withCredentials: true }).pipe(
       tap(() => {
         this.setCurrentUser(null);
+      })
+    );
+  }
+
+  register(username: string, email: string, password: string): Observable<User> {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/register/`, {
+      username,
+      email,
+      password
+    }, { withCredentials: true }).pipe(
+      tap(response => {
+        if (response.success && response.user) {
+          this.setCurrentUser(response.user);
+        }
+      }),
+      map((response: LoginResponse) => response.user),
+      tap({
+        error: () => this.setCurrentUser(null)
       })
     );
   }
@@ -71,16 +91,31 @@ export class AuthService {
     return user ? user.is_staff : false;
   }
 
-  private checkAuthStatus(): void {
-    this.http.get<UserInfoResponse>(`${environment.apiUrl}/api/auth/user/`).subscribe({
+  checkAuthStatus(): void {
+    this.http.get<UserInfoResponse>(`${environment.apiUrl}/api/auth/user/`, { withCredentials: true }).subscribe({
       next: (response) => {
         if (response.success && response.user) {
           this.setCurrentUser(response.user);
         } else {
           this.setCurrentUser(null);
         }
+        this.authCheckComplete.next(true);
       },
-      error: () => this.setCurrentUser(null)
+      error: () => {
+        this.setCurrentUser(null);
+        this.authCheckComplete.next(true);
+      }
     });
+  }
+
+  // OAuth methods
+  loginWithGoogle(): void {
+    // Прямое перенаправление на наш кастомный endpoint (без промежуточных страниц)
+    window.location.href = 'http://localhost/api/oauth/google/login/';
+  }
+
+  loginWithGitHub(): void {
+    // Прямое перенаправление на наш кастомный endpoint (без промежуточных страниц)
+    window.location.href = 'http://localhost/api/oauth/github/login/';
   }
 }

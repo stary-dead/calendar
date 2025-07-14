@@ -81,4 +81,15 @@ export class LoginComponent implements OnInit {
     }
     return '';
   }
+
+  // OAuth login methods
+  loginWithGoogle(): void {
+    // Простое перенаправление на Google OAuth
+    window.location.href = 'http://localhost/oauth/google/login/';
+  }
+
+  loginWithGitHub(): void {
+    // Простое перенаправление на GitHub OAuth
+    window.location.href = 'http://localhost/oauth/github/login/';
+  }
 }

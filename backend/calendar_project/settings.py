@@ -194,9 +194,6 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:4200,http://localhost').split(',')
 CORS_ALLOW_CREDENTIALS = True
 
-# CSRF settings for API
-CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4200']
-
 # Nginx proxy settings
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
@@ -251,6 +248,11 @@ SESSION_COOKIE_HTTPONLY = True  # Защита от XSS
 SESSION_COOKIE_SECURE = False  # True для HTTPS в продакшне
 SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
 SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_DOMAIN = 'localhost'  # Shared domain для nginx proxy
+
+# CSRF configuration for nginx proxy
+CSRF_COOKIE_DOMAIN = 'localhost'
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4200']
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
@@ -270,9 +272,23 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
 
+# Автоматическое перенаправление без промежуточной страницы
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Отключить форму регистрации для OAuth пользователей
+ACCOUNT_SIGNUP_FORM_CLASS = None
+ACCOUNT_FORMS = {
+    'signup': None,  # Отключить форму регистрации
+}
+
+# Дополнительные настройки для автоматической регистрации
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+
 # Redirect URLs for OAuth
-LOGIN_REDIRECT_URL = '/oauth/callback/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+FRONTEND_URL = 'http://localhost:4200'
+LOGIN_REDIRECT_URL = 'http://localhost:4200/calendar'
+ACCOUNT_LOGOUT_REDIRECT_URL = 'http://localhost:4200/login'
 
 # OAuth Provider Settings
 SOCIALACCOUNT_PROVIDERS = {

@@ -6,6 +6,10 @@ from allauth.socialaccount.models import SocialAccount
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from django.shortcuts import redirect
+from django.urls import reverse
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
 import json
 
 
@@ -65,31 +69,6 @@ def social_accounts_view(request):
     })
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def oauth_callback_view(request):
-    """
-    Handle OAuth callback and return user info for frontend
-    """
-    if request.user.is_authenticated:
-        return JsonResponse({
-            'success': True,
-            'user': {
-                'id': request.user.id,
-                'username': request.user.username,
-                'email': request.user.email,
-                'is_staff': request.user.is_staff,
-                'is_authenticated': True,
-                'oauth_provider': get_user_oauth_provider(request.user)
-            }
-        })
-    else:
-        return JsonResponse({
-            'success': False,
-            'error': 'OAuth authentication failed'
-        }, status=401)
-
-
 def get_user_oauth_provider(user):
     """
     Get the OAuth provider for a user
@@ -99,3 +78,4 @@ def get_user_oauth_provider(user):
         return social_account.provider if social_account else None
     except SocialAccount.DoesNotExist:
         return None
+

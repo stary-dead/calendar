@@ -24,7 +24,7 @@ export class ApiService {
   // Bookings
   createBooking(timeSlotId: number): Observable<Booking> {
     return this.http.post<Booking>(`${environment.apiUrl}/api/bookings/`, {
-      time_slot_id: timeSlotId
+      time_slot: timeSlotId
     });
   }
 

@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/auth/', include('users.auth_urls')),  # Auth endpoints
     path('api/', include('users.user_urls')),  # User API endpoints  
     path('api/admin/', include('users.admin_urls')),  # Admin API endpoints
+    path('api/oauth/', include('users.oauth_urls')),  # OAuth API endpoints
     path('oauth/', include('allauth.urls')),  # Allauth OAuth endpoints
     
     # API Documentation

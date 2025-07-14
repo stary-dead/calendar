@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, map, filter, take, combineLatest } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 @Injectable({
@@ -13,8 +13,14 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(): Observable<boolean> {
-    return this.authService.currentUser$.pipe(
-      map(user => {
+    // Ждем пока завершится проверка авторизации
+    return combineLatest([
+      this.authService.currentUser$,
+      this.authService.authCheckComplete$
+    ]).pipe(
+      filter(([user, checkComplete]) => checkComplete), // Ждем завершения проверки
+      take(1), // Берем только первый результат
+      map(([user, checkComplete]) => {
         if (user) {
           return true;
         } else {

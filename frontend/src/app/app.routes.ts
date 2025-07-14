@@ -13,6 +13,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/auth/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'oauth/callback',
+    loadComponent: () => import('./components/auth/oauth-callback/oauth-callback.component').then(m => m.OAuthCallbackComponent)
+  },
+  {
     path: 'calendar',
     loadComponent: () => import('./components/calendar/calendar.component').then(m => m.CalendarComponent),
     canActivate: [AuthGuard]
@@ -21,6 +25,10 @@ export const routes: Routes = [
     path: 'preferences',
     loadComponent: () => import('./components/user/preferences/preferences.component').then(m => m.PreferencesComponent),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'test-oauth',
+    loadComponent: () => import('./components/test-oauth/test-oauth.component').then(m => m.TestOAuthComponent)
   },
   {
     path: 'admin',

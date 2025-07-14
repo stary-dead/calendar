@@ -1,13 +1,14 @@
 export interface TimeSlot {
   id: number;
-  date: string;
-  startTime: string;
-  endTime: string;
-  categoryId: number;
-  categoryCode: 'cat1' | 'cat2' | 'cat3';
-  isBooked: boolean;
-  bookedByCurrentUser?: boolean;
-  bookedBy?: User;
+  category: number;
+  category_name: string;
+  start_time: string;
+  end_time: string;
+  is_booked: boolean;
+  booked_by: string | null;
+  can_book: boolean;
+  created_by: number;
+  created_at: string;
 }
 
 export interface User {
@@ -20,13 +21,19 @@ export interface User {
 
 export interface Booking {
   id: number;
-  timeSlot: TimeSlot;
-  user: User;
-  createdAt: string;
+  time_slot: TimeSlot;
+  booked_at: string;
+  can_cancel: boolean;
 }
 
 export interface UserPreferences {
-  cat1: boolean;
-  cat2: boolean;
-  cat3: boolean;
+  cat_1: boolean;
+  cat_2: boolean;
+  cat_3: boolean;
+  updated_at?: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
 }
