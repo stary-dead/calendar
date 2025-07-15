@@ -48,14 +48,6 @@
             <mat-icon matListItemIcon>calendar_today</mat-icon>
             <span matListItemTitle>Calendar</span>
           </a>
-          
-          <a mat-list-item 
-             routerLink="/preferences" 
-             routerLinkActive="active-link"
-             (click)="toggleMenu()">
-            <mat-icon matListItemIcon>settings</mat-icon>
-            <span matListItemTitle>Preferences</span>
-          </a>
 
           <!-- Admin Navigation -->
           <div *ngIf="isAdminUser(user)" class="admin-section">

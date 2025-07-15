@@ -12,9 +12,8 @@ from datetime import datetime, timedelta
 from events.models import Category, TimeSlot
 from bookings.models import Booking
 from bookings.websocket_utils import send_booking_created_event, send_booking_cancelled_event
-from users.models import UserPreference
 from users.serializers import (
-    CategorySerializer, UserPreferenceSerializer, TimeSlotSerializer,
+    CategorySerializer, TimeSlotSerializer,
     BookingCreateSerializer, BookingSerializer, UserBookingSerializer
 )
 
@@ -26,24 +25,6 @@ def categories_list(request):
     categories = Category.objects.all()
     serializer = CategorySerializer(categories, many=True)
     return Response(serializer.data)
-
-
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def user_preferences(request):
-    """GET/POST /api/user/preferences/ - предпочтения пользователя"""
-    preferences, created = UserPreference.objects.get_or_create(user=request.user)
-    
-    if request.method == 'GET':
-        serializer = UserPreferenceSerializer(preferences)
-        return Response(serializer.data)
-    
-    elif request.method == 'POST':
-        serializer = UserPreferenceSerializer(preferences, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

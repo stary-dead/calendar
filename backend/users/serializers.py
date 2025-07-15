@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from events.models import Category, TimeSlot
 from bookings.models import Booking
-from users.models import UserPreference
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -11,23 +10,6 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
-
-
-class UserPreferenceSerializer(serializers.ModelSerializer):
-    """Serializer for UserPreference model"""
-    
-    class Meta:
-        model = UserPreference
-        fields = ['cat_1', 'cat_2', 'cat_3', 'updated_at']
-        read_only_fields = ['updated_at']
-    
-    def validate(self, data):
-        """Ensure at least one category is selected"""
-        if not any([data.get('cat_1'), data.get('cat_2'), data.get('cat_3')]):
-            raise serializers.ValidationError(
-                "At least one category must be selected"
-            )
-        return data
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):

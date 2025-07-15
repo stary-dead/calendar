@@ -1,6 +1,6 @@
 """
 Unit tests for user API endpoints
-Tests for user-specific endpoints including categories, preferences, timeslots, and bookings
+Tests for user-specific endpoints including categories, timeslots, and bookings
 """
 from django.urls import reverse
 from django.utils import timezone
@@ -10,7 +10,6 @@ from rest_framework import status
 
 from .base import BaseAPITestCase
 from bookings.models import Booking
-from users.models import UserPreference
 from events.models import TimeSlot
 
 
@@ -28,51 +27,6 @@ class CategoriesListTest(BaseAPITestCase):
         self.assertIn('Cat 1', category_names)
         self.assertIn('Cat 2', category_names)
         self.assertIn('Cat 3', category_names)
-
-
-class UserPreferencesTest(BaseAPITestCase):
-    """Test user preferences endpoint"""
-    
-    def test_get_preferences_authenticated(self):
-        """Test getting user preferences when authenticated"""
-        self.authenticate_user()
-        url = reverse('user_preferences')
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('cat_1', response.data)
-        self.assertIn('cat_2', response.data)
-        self.assertIn('cat_3', response.data)
-    
-    def test_get_preferences_unauthenticated(self):
-        """Test getting user preferences without authentication"""
-        url = reverse('user_preferences')
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-    
-    def test_update_preferences(self):
-        """Test updating user preferences"""
-        self.authenticate_user()
-        url = reverse('user_preferences')
-        
-        data = {
-            'cat_1': True,
-            'cat_2': False,
-            'cat_3': True
-        }
-        response = self.client.post(url, data)
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data['cat_1'])
-        self.assertFalse(response.data['cat_2'])
-        self.assertTrue(response.data['cat_3'])
-        
-        # Verify in database
-        preferences = UserPreference.objects.get(user=self.regular_user)
-        self.assertTrue(preferences.cat_1)
-        self.assertFalse(preferences.cat_2)
-        self.assertTrue(preferences.cat_3)
 
 
 class TimeslotsListTest(BaseAPITestCase):

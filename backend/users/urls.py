@@ -11,7 +11,7 @@ urlpatterns = [
     # OAuth endpoints (Google, GitHub, etc.)
     path('oauth/', include('users.oauth_urls')),
     
-    # User API endpoints (categories, preferences, timeslots, bookings)
+    # User API endpoints (categories, timeslots, bookings)
     path('', include('users.user_urls')),
     
     # Admin API endpoints (admin timeslots, admin bookings)

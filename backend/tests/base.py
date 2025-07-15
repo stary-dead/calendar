@@ -9,7 +9,6 @@ from rest_framework.test import APITestCase, APIClient
 
 from events.models import Category, TimeSlot
 from bookings.models import Booking
-from users.models import UserPreference
 
 
 class BaseAPITestCase(APITestCase):

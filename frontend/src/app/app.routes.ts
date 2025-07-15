@@ -9,6 +9,11 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'home',
+    redirectTo: '/calendar',
+    pathMatch: 'full'
+  },
+  {
     path: 'login',
     loadComponent: () => import('./components/auth/login/login.component').then(m => m.LoginComponent)
   },
@@ -23,11 +28,6 @@ export const routes: Routes = [
   {
     path: 'calendar',
     loadComponent: () => import('./components/calendar/calendar.component').then(m => m.CalendarComponent),
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'preferences',
-    loadComponent: () => import('./components/user/preferences/preferences.component').then(m => m.PreferencesComponent),
     canActivate: [AuthGuard]
   },
   {
