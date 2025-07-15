@@ -38,11 +38,6 @@
             </mat-error>
           </mat-form-field>
 
-          <div class="error-message" *ngIf="errorMessage">
-            <mat-icon>error</mat-icon>
-            <span>{{ errorMessage }}</span>
-          </div>
-
           <button 
             mat-raised-button 
             color="primary" 
@@ -50,11 +45,12 @@
             class="login-button full-width"
             [disabled]="loginForm.invalid || isLoading">
             <div class="button-content">
-              <mat-progress-spinner 
+              <app-loading-spinner 
                 *ngIf="isLoading" 
-                diameter="20" 
+                [diameter]="20" 
+                [message]="''"
                 class="spinner">
-              </mat-progress-spinner>
+              </app-loading-spinner>
               <span>{{ isLoading ? 'Signing In...' : 'Sign In' }}</span>
             </div>
           </button>

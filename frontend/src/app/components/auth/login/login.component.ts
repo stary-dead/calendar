@@ -4,24 +4,25 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { MaterialModule } from '../../../material.module';
 import { AuthService } from '../../../services/auth.service';
+import { LoadingSpinnerComponent, ErrorMessageService } from '../../shared';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, LoadingSpinnerComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
-  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private errorMessageService: ErrorMessageService
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -41,7 +42,6 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
-      this.errorMessage = '';
       
       const { username, password } = this.loginForm.value;
       
@@ -67,7 +67,7 @@ export class LoginComponent implements OnInit {
             }
           }
           
-          this.errorMessage = errorMsg;
+          this.errorMessageService.showError(errorMsg);
           this.cdr.detectChanges(); // Force change detection
         }
       });
