@@ -7,7 +7,22 @@ import { User } from '../models';
 interface LoginResponse {
   success: boolean;
   message?: string;
-  user: User;
+  user?: User;
+  error?: string;
+  error_type?: 'oauth_only_account' | 'regular_account_exists';
+  email?: string;
+  available_providers?: string[];
+}
+
+interface RegisterResponse {
+  success: boolean;
+  message?: string;
+  user?: User;
+  error?: string;
+  error_type?: 'oauth_account_exists' | 'regular_account_exists';
+  email?: string;
+  available_providers?: string[];
+  has_password?: boolean;
 }
 
 interface UserInfoResponse {
@@ -29,7 +44,7 @@ export class AuthService {
     this.checkAuthStatus();
   }
 
-  login(username: string, password: string): Observable<User> {
+  login(username: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login/`, {
       username,
       password
@@ -39,9 +54,6 @@ export class AuthService {
           this.setCurrentUser(response.user);
         }
       }),
-      // Return user from response
-      map((response: LoginResponse) => response.user),
-      // Handle errors and reset user
       tap({
         error: () => this.setCurrentUser(null)
       })
@@ -56,8 +68,8 @@ export class AuthService {
     );
   }
 
-  register(username: string, email: string, password: string): Observable<User> {
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/register/`, {
+  register(username: string, email: string, password: string): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${environment.apiUrl}/api/auth/register/`, {
       username,
       email,
       password
@@ -67,7 +79,6 @@ export class AuthService {
           this.setCurrentUser(response.user);
         }
       }),
-      map((response: LoginResponse) => response.user),
       tap({
         error: () => this.setCurrentUser(null)
       })
@@ -110,12 +121,30 @@ export class AuthService {
 
   // OAuth methods
   loginWithGoogle(): void {
-    // Прямое перенаправление на наш кастомный endpoint (без промежуточных страниц)
-    window.location.href = 'http://localhost/api/oauth/google/login/';
+    // Прямое перенаправление на OAuth endpoint
+    window.location.href = `${environment.apiUrl}/oauth/google/login/`;
   }
 
   loginWithGitHub(): void {
-    // Прямое перенаправление на наш кастомный endpoint (без промежуточных страниц)
-    window.location.href = 'http://localhost/api/oauth/github/login/';
+    // Прямое перенаправление на OAuth endpoint  
+    window.location.href = `${environment.apiUrl}/oauth/github/login/`;
+  }
+
+  // Helper methods for error handling
+  isOAuthAccountError(error: any): boolean {
+    return error?.error?.error_type === 'oauth_account_exists' || 
+           error?.error?.error_type === 'oauth_only_account';
+  }
+
+  isRegularAccountError(error: any): boolean {
+    return error?.error?.error_type === 'regular_account_exists';
+  }
+
+  getAvailableProviders(error: any): string[] {
+    return error?.error?.available_providers || [];
+  }
+
+  getErrorEmail(error: any): string {
+    return error?.error?.email || '';
   }
 }

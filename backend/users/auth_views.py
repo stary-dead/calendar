@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from allauth.socialaccount.models import SocialAccount
 import json
 
 
@@ -19,7 +20,7 @@ import json
 @require_http_methods(["POST"])
 def login_view(request):
     """
-    User login endpoint
+    User login endpoint with OAuth account detection
     """
     try:
         data = json.loads(request.body)
@@ -32,6 +33,7 @@ def login_view(request):
                 'error': 'Username and password are required'
             }, status=400)
         
+        # Попытка аутентификации
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
@@ -47,6 +49,28 @@ def login_view(request):
                 }
             })
         else:
+            # Проверяем, может ли это быть email вместо username
+            try:
+                if '@' in username:  # Пользователь ввел email
+                    user_by_email = User.objects.get(email=username)
+                    
+                    # Проверяем, есть ли у пользователя social accounts
+                    social_accounts = SocialAccount.objects.filter(user=user_by_email)
+                    
+                    if social_accounts.exists():
+                        # У пользователя есть OAuth аккаунт - направляем на OAuth
+                        providers = list(social_accounts.values_list('provider', flat=True))
+                        return JsonResponse({
+                            'success': False,
+                            'error_type': 'oauth_only_account',
+                            'error': f'This account was created with {", ".join(providers).title()}. Please sign in using OAuth.',
+                            'email': username,
+                            'available_providers': providers
+                        }, status=401)
+                
+            except User.DoesNotExist:
+                pass
+            
             return JsonResponse({
                 'success': False,
                 'error': 'Invalid credentials'
@@ -109,7 +133,7 @@ def user_info_view(request):
 @permission_classes([AllowAny])
 def register_view(request):
     """
-    User registration endpoint (for testing purposes)
+    User registration endpoint with OAuth account detection
     """
     try:
         username = request.data.get('username')
@@ -122,12 +146,40 @@ def register_view(request):
                 'error': 'Username and password are required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # Проверяем существование пользователя по username
         if User.objects.filter(username=username).exists():
             return Response({
                 'success': False,
                 'error': 'Username already exists'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # Проверяем существование пользователя по email
+        if email and User.objects.filter(email=email).exists():
+            existing_user = User.objects.get(email=email)
+            
+            # Проверяем, есть ли у этого пользователя social accounts
+            social_accounts = SocialAccount.objects.filter(user=existing_user)
+            
+            if social_accounts.exists():
+                # Пользователь зарегистрирован через OAuth - НЕ разрешаем обычную регистрацию
+                providers = list(social_accounts.values_list('provider', flat=True))
+                return Response({
+                    'success': False,
+                    'error_type': 'oauth_account_exists',
+                    'error': f'Account with this email already exists and was created via {", ".join(providers).title()}. Please sign in using OAuth.',
+                    'email': email,
+                    'available_providers': providers
+                }, status=status.HTTP_409_CONFLICT)
+            else:
+                # Пользователь уже зарегистрирован обычным способом
+                return Response({
+                    'success': False,
+                    'error_type': 'regular_account_exists', 
+                    'error': 'User with this email already exists. Please sign in with your password.',
+                    'email': email
+                }, status=status.HTTP_409_CONFLICT)
+        
+        # Создаем нового пользователя
         user = User.objects.create_user(
             username=username,
             password=password,

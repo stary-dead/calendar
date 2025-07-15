@@ -10,9 +10,40 @@
       </mat-card-header>
 
       <mat-card-content>
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- OAuth Account Error Message -->
+        <div *ngIf="showOAuthOptions" class="oauth-error-section">
+          <mat-card class="error-card">
+            <mat-card-header>
+              <mat-icon color="warn">info</mat-icon>
+              <mat-card-title>Account Found</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>This email is associated with an account created via OAuth.</p>
+              <p><strong>Email:</strong> {{ errorEmail }}</p>
+              
+              <div class="oauth-options">
+                <p>Please sign in using one of these methods:</p>
+                
+                <div class="provider-buttons">
+                  <button 
+                    *ngFor="let provider of availableProviders"
+                    mat-raised-button 
+                    color="primary"
+                    (click)="loginWithProvider(provider)"
+                    class="provider-button">
+                    <mat-icon>{{ provider === 'google' ? 'google' : 'code' }}</mat-icon>
+                    Sign in with {{ formatProviderName(provider) }}
+                  </button>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Regular Login Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" *ngIf="!showOAuthOptions">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Username</mat-label>
+            <mat-label>Username or Email</mat-label>
             <input 
               matInput 
               formControlName="username" 
@@ -56,12 +87,34 @@
           </button>
         </form>
 
+        <!-- Back to form button when showing OAuth options -->
+        <div *ngIf="showOAuthOptions" class="back-to-form">
+          <button 
+            mat-button 
+            color="primary" 
+            (click)="showOAuthOptions = false"
+            type="button">
+            <mat-icon>arrow_back</mat-icon>
+            Try Different Credentials
+          </button>
+        </div>
+
+        <!-- Register Toggle Button -->
+        <div class="register-toggle" *ngIf="!showOAuthOptions">
+          <p class="register-prompt">
+            Don't have an account yet? 
+            <button mat-button color="primary" (click)="navigateToRegister()" type="button">
+              Create one now
+            </button>
+          </p>
+        </div>
+
         <!-- OAuth Section -->
-        <div class="oauth-divider">
+        <div class="oauth-divider" *ngIf="!showOAuthOptions">
           <span>OR</span>
         </div>
 
-        <div class="oauth-buttons">
+        <div class="oauth-buttons" *ngIf="!showOAuthOptions">
           <button 
             mat-stroked-button 
             class="oauth-button google-button full-width"
@@ -92,12 +145,6 @@
           </button>
         </div>
       </mat-card-content>
-
-      <mat-card-actions class="card-actions">
-        <p class="help-text">
-          Use your existing credentials to access the calendar system.
-        </p>
-      </mat-card-actions>
     </mat-card>
   </div>
 </div>
