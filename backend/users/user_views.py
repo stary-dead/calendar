@@ -6,7 +6,6 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 
 from events.models import Category, TimeSlot
@@ -79,7 +78,6 @@ def timeslots_list(request):
     return Response(serializer.data)
 
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_booking(request):
@@ -96,12 +94,23 @@ def create_booking(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
-@api_view(['DELETE'])
+@api_view(['GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def cancel_booking(request, booking_id):
     """DELETE /api/bookings/{id}/ - отмена бронирования"""
-    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    # Временно добавим GET для тестирования
+    if request.method == 'GET':
+        return Response({'message': f'Test endpoint works for booking_id: {booking_id}'})
+    
+    try:
+        if request.user.is_staff:
+            booking = get_object_or_404(Booking, id=booking_id)
+        else:
+            booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+        print(f"Found booking: {booking}")
+    except Exception as e:
+        print(f"Error finding booking: {e}")
+        raise
     
     can_cancel, message = booking.can_cancel()
     if not can_cancel:

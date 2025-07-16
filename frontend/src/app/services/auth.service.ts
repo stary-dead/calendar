@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { User } from '../models';
+import { CsrfService } from './csrf.service';
 
 interface LoginResponse {
   success: boolean;
@@ -39,7 +40,10 @@ export class AuthService {
   private authCheckComplete = new BehaviorSubject<boolean>(false);
   public authCheckComplete$ = this.authCheckComplete.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private csrfService: CsrfService
+  ) {
     // Check if user is already logged in on service initialization
     this.checkAuthStatus();
   }
@@ -48,7 +52,10 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login/`, {
       username,
       password
-    }, { withCredentials: true }).pipe(
+    }, { 
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true 
+    }).pipe(
       tap(response => {
         if (response.success && response.user) {
           this.setCurrentUser(response.user);
@@ -61,7 +68,10 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/api/auth/logout/`, {}, { withCredentials: true }).pipe(
+    return this.http.post<void>(`${environment.apiUrl}/api/auth/logout/`, {}, { 
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true 
+    }).pipe(
       tap(() => {
         this.setCurrentUser(null);
       })
@@ -73,7 +83,10 @@ export class AuthService {
       username,
       email,
       password
-    }, { withCredentials: true }).pipe(
+    }, { 
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true 
+    }).pipe(
       tap(response => {
         if (response.success && response.user) {
           this.setCurrentUser(response.user);

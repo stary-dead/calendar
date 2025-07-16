@@ -1,0 +1,128 @@
+<div class="calendar-container">
+  <!-- Category Filter Section -->
+  <mat-card class="filter-card">
+    <mat-card-header>
+      <mat-card-title>Event Categories</mat-card-title>
+      <mat-card-subtitle>Select categories to filter calendar events</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <app-category-filter
+        [selection]="categorySelection"
+        [title]="'Filter Categories'"
+        [subtitle]="'Choose which event categories to display'"
+        [showTitle]="false"
+        [horizontal]="true"
+        [compact]="true"
+        (selectionChange)="onCategorySelectionChange($event)">
+      </app-category-filter>
+      
+      <div class="filter-status" *ngIf="!hasAnySelection">
+        <mat-icon color="warn">warning</mat-icon>
+        <span>Select at least one category to see time slots</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Calendar Section -->
+  <mat-card class="calendar-card">
+    <mat-card-header>
+      <mat-card-title>Weekly Calendar</mat-card-title>
+      <mat-card-subtitle>Time slots for selected categories</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="!hasAnySelection" class="no-selection-message">
+        <mat-icon>event_busy</mat-icon>
+        <h3>No categories selected</h3>
+        <p>Please select at least one category above to see available time slots.</p>
+      </div>
+      
+      <div *ngIf="hasAnySelection" class="calendar-content">
+        <!-- Calendar Navigation -->
+        <div class="calendar-navigation">
+          <button mat-icon-button (click)="previousWeek()" [disabled]="isLoading">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <div class="week-info">
+            <h3>{{ getWeekDisplayText() }}</h3>
+            <p class="week-range">{{ getWeekRangeText() }}</p>
+          </div>
+          <button mat-icon-button (click)="nextWeek()" [disabled]="isLoading">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <span>Loading time slots...</span>
+        </div>
+
+        <!-- Weekly Calendar Grid -->
+        <div *ngIf="!isLoading" class="weekly-calendar">
+          <div class="calendar-header">
+            <div class="time-column-header">Time</div>
+            <div class="day-header" *ngFor="let day of weekDays">
+              <div class="day-name">{{ day.name }}</div>
+              <div class="day-date">{{ formatDate(day.date) }}</div>
+            </div>
+          </div>
+
+          <div class="calendar-body">
+            <div class="time-slots-container">
+              <div *ngFor="let hour of displayHours" class="hour-row">
+                <div class="time-column">
+                  {{ formatHour(hour) }}
+                </div>
+                <div class="day-slots" *ngFor="let day of weekDays">
+                  <div class="slot-wrapper" *ngFor="let slot of getSlotsForDayAndHour(day.date, hour)">
+                    <mat-card 
+                      class="time-slot-card"
+                      [ngClass]="getSlotClass(slot)"
+                      (click)="onSlotClick(slot)"
+                      [matTooltip]="getSlotTooltip(slot)"
+                      matTooltipPosition="above">
+                      
+                      <div class="slot-time">
+                        {{ formatSlotTime(slot.start_time, slot.end_time) }}
+                      </div>
+                      
+                      <div class="slot-category">
+                        <mat-chip 
+                          [color]="getCategoryColor(slot.category_name)"
+                          class="category-chip">
+                          {{ slot.category_name }}
+                        </mat-chip>
+                      </div>
+                      
+                      <div class="slot-status" *ngIf="slot.is_booked">
+                        <mat-icon class="booked-icon">person</mat-icon>
+                        <span class="booked-text">Booked</span>
+                      </div>
+                      
+                      <div class="slot-actions" *ngIf="canInteractWithSlot(slot)">
+                        <mat-icon *ngIf="!slot.is_booked">add_circle</mat-icon>
+                        <mat-icon *ngIf="slot.is_booked && isMyBooking(slot)">cancel</mat-icon>
+                      </div>
+                    </mat-card>
+                  </div>
+                  
+                  <!-- Empty slot placeholder -->
+                  <div *ngIf="getSlotsForDayAndHour(day.date, hour).length === 0" class="empty-slot">
+                    <!-- No slots for this time -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No slots message -->
+        <div *ngIf="!isLoading && timeSlots.length === 0" class="no-slots-message">
+          <mat-icon>event_note</mat-icon>
+          <h3>No time slots available</h3>
+          <p>There are no time slots for the selected week and categories.</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { MaterialModule } from './material.module';
 import { AuthService } from './services/auth.service';
+import { CsrfService } from './services/csrf.service';
 import { LayoutComponent } from './components/layout/layout.component';
 
 @Component({
@@ -16,10 +17,14 @@ export class App implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private csrfService: CsrfService,
     private router: Router
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // Initialize CSRF token first
+    await this.csrfService.initializeCsrfToken();
+
     // Check authentication status and show layout accordingly
     this.authService.currentUser$.subscribe(user => {
       this.showLayout = !!user;

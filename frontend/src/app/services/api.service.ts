@@ -3,13 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { TimeSlot, Booking } from '../models';
+import { CsrfService } from './csrf.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private csrfService: CsrfService
+  ) {}
 
   // TimeSlots
   getTimeSlots(startDate?: string, endDate?: string, categories?: string[]): Observable<TimeSlot[]> {
@@ -18,48 +22,74 @@ export class ApiService {
     if (endDate) params.end_date = endDate;
     if (categories && categories.length > 0) params.categories = categories.join(',');
 
-    return this.http.get<TimeSlot[]>(`${environment.apiUrl}/api/timeslots/`, { params });
+    return this.http.get<TimeSlot[]>(`${environment.apiUrl}/api/timeslots/`, { 
+      params,
+      withCredentials: true
+    });
   }
 
   // Bookings
   createBooking(timeSlotId: number): Observable<Booking> {
     return this.http.post<Booking>(`${environment.apiUrl}/api/bookings/`, {
       time_slot: timeSlotId
+    }, {
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true
     });
   }
 
   cancelBooking(bookingId: number): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/api/bookings/${bookingId}/`);
+    return this.http.delete<void>(`${environment.apiUrl}/api/bookings/${bookingId}/`, {
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true
+    });
   }
 
   getUserBookings(): Observable<Booking[]> {
-    return this.http.get<Booking[]>(`${environment.apiUrl}/api/user/bookings/`);
+    return this.http.get<Booking[]>(`${environment.apiUrl}/api/user/bookings/`, {
+      withCredentials: true
+    });
   }
 
   // User Preferences
   getUserPreferences(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/api/user/preferences/`);
+    return this.http.get(`${environment.apiUrl}/api/user/preferences/`, {
+      withCredentials: true
+    });
   }
 
   updateUserPreferences(preferences: any): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/user/preferences/`, preferences);
+    return this.http.post(`${environment.apiUrl}/api/user/preferences/`, preferences, {
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true
+    });
   }
 
   // Categories
   getCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/categories/`);
+    return this.http.get<any[]>(`${environment.apiUrl}/api/categories/`, {
+      withCredentials: true
+    });
   }
 
   // Admin endpoints
   createTimeSlot(timeSlot: any): Observable<TimeSlot> {
-    return this.http.post<TimeSlot>(`${environment.apiUrl}/api/admin/timeslots/`, timeSlot);
+    return this.http.post<TimeSlot>(`${environment.apiUrl}/api/admin/timeslots/`, timeSlot, {
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true
+    });
   }
 
   getAllBookings(): Observable<Booking[]> {
-    return this.http.get<Booking[]>(`${environment.apiUrl}/api/admin/bookings/`);
+    return this.http.get<Booking[]>(`${environment.apiUrl}/api/admin/bookings/`, {
+      withCredentials: true
+    });
   }
 
   deleteTimeSlot(timeSlotId: number): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/api/admin/timeslots/${timeSlotId}/`);
+    return this.http.delete<void>(`${environment.apiUrl}/api/admin/timeslots/${timeSlotId}/`, {
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true
+    });
   }
 }

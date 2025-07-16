@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, filter } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WebSocketService, WebSocketMessage } from './websocket.service';
+import { CsrfService } from './csrf.service';
 
 export interface TimeSlot {
   id: number;
@@ -37,7 +38,8 @@ export class BookingService {
 
   constructor(
     private http: HttpClient,
-    private websocketService: WebSocketService
+    private websocketService: WebSocketService,
+    private csrfService: CsrfService
   ) {
     this.setupWebSocketListeners();
   }
@@ -50,7 +52,10 @@ export class BookingService {
       time_slot: timeSlotId
     };
 
-    return this.http.post<Booking>(`${environment.apiUrl}/api/bookings/`, request, { withCredentials: true }).pipe(
+    return this.http.post<Booking>(`${environment.apiUrl}/api/bookings/`, request, { 
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true 
+    }).pipe(
       tap(() => {
         // Refresh user bookings after successful creation
         this.loadUserBookings();
@@ -62,7 +67,10 @@ export class BookingService {
    * Cancel a booking
    */
   cancelBooking(bookingId: number): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/api/bookings/${bookingId}/`, { withCredentials: true }).pipe(
+    return this.http.delete<void>(`${environment.apiUrl}/api/bookings/${bookingId}/`, { 
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true 
+    }).pipe(
       tap(() => {
         // Refresh user bookings after successful cancellation
         this.loadUserBookings();

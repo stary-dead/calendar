@@ -37,6 +37,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
 
 INSTALLED_APPS = [
+    'django_extensions',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -193,6 +195,18 @@ SPECTACULAR_SETTINGS = {
 # CORS settings
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:4200,http://localhost').split(',')
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Nginx proxy settings
 USE_X_FORWARDED_HOST = True
@@ -253,6 +267,11 @@ SESSION_COOKIE_DOMAIN = 'localhost'  # Shared domain для nginx proxy
 # CSRF configuration for nginx proxy
 CSRF_COOKIE_DOMAIN = 'localhost'
 CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1', 'http://localhost:8000', 'http://127.0.0.1:8000', 'http://localhost:4200']
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_HTTPONLY = False  # Позволить JavaScript читать CSRF токен
+CSRF_COOKIE_SECURE = False  # True для HTTPS в продакшне
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'  # Заголовок для CSRF токена
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [

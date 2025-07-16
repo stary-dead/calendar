@@ -89,7 +89,8 @@ class TimeSlot(models.Model):
     def is_available(self):
         """Check if time slot is available for booking"""
         from django.utils import timezone
-        
+        if not self.start_time or not self.end_time:
+            return False
         # Check if in the past
         if self.start_time < timezone.now():
             return False
@@ -133,7 +134,7 @@ class TimeSlot(models.Model):
     @property
     def duration_minutes(self):
         """Return duration in minutes"""
-        return int((self.end_time - self.start_time).total_seconds() / 60)
+        return int((self.end_time - self.start_time).total_seconds() / 60) if self.start_time and self.end_time else 0
     
     def __str__(self):
         return f"{self.category.name} - {self.start_time.strftime('%Y-%m-%d %H:%M')} to {self.end_time.strftime('%H:%M')}"
