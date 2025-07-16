@@ -1,11 +1,12 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../material.module';
-import { CategoryFilterComponent, CategorySelection, ErrorMessageService, ConfirmDialogService } from '../shared';
+import { CategoryFilterComponent, CategorySelection, ErrorMessageService, ConfirmDialogService, AdminSlotFormComponent, CreateSlotData } from '../shared';
 import { Category, CATEGORIES } from '../../models/category.model';
 import { BookingService, TimeSlot } from '../../services/booking.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { AuthService } from '../../services/auth.service';
+import { ApiService } from '../../services/api.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -14,12 +15,15 @@ import { Subject, takeUntil } from 'rxjs';
   imports: [
     CommonModule, 
     MaterialModule, 
-    CategoryFilterComponent
+    CategoryFilterComponent,
+    AdminSlotFormComponent
   ],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss']
 })
 export class CalendarComponent implements OnInit, OnDestroy {
+  @ViewChild(AdminSlotFormComponent) adminSlotForm!: AdminSlotFormComponent;
+  
   private destroy$ = new Subject<void>();
   
   categorySelection: CategorySelection = {
@@ -43,7 +47,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
     private websocketService: WebSocketService,
     private authService: AuthService,
     private confirmDialogService: ConfirmDialogService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private apiService: ApiService
   ) {
     // Ensure loading starts as false
     this.isLoading = false;
@@ -66,6 +71,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
   
   get hasAnySelection(): boolean {
     return this.categorySelection.cat1 || this.categorySelection.cat2 || this.categorySelection.cat3;
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
   }
   
   onCategorySelectionChange(selection: CategorySelection): void {
@@ -169,11 +178,20 @@ export class CalendarComponent implements OnInit, OnDestroy {
         tooltip += '\n\nYour booking - Click to cancel';
       } else {
         tooltip += '\n\nBooked by another user';
+        // Show booked user info for admins
+        if (this.isAdmin && slot.booked_by) {
+          tooltip += `\nBooked by: ${slot.booked_by}`;
+        }
       }
     } else if (slot.can_book) {
       tooltip += '\n\nAvailable - Click to book';
     } else {
       tooltip += '\n\nUnavailable';
+    }
+
+    // Add admin context menu hint
+    if (this.isAdmin) {
+      tooltip += '\n\nRight-click for admin options';
     }
     
     return tooltip;
@@ -232,6 +250,106 @@ export class CalendarComponent implements OnInit, OnDestroy {
     } else if (!slot.is_booked && slot.can_book) {
       this.createBooking(slot);
     }
+  }
+
+  // Admin context menu
+  onSlotRightClick(event: MouseEvent, slot: TimeSlot): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.confirmDialogService.confirm({
+      title: 'Delete Time Slot',
+      message: `Are you sure you want to delete this time slot?\n\nCategory: ${slot.category_name}\nTime: ${this.formatSlotTime(slot.start_time, slot.end_time)}\n\nThis action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.deleteTimeSlot(slot);
+      }
+    });
+  }
+
+  // Admin slot creation
+  onCreateSlot(slotData: CreateSlotData): void {
+    if (!this.isAdmin) {
+      this.errorMessageService.showError('Unauthorized: Admin access required');
+      return;
+    }
+
+    // Combine date and time to create DateTime strings with timezone
+    // Create dates in local timezone, then convert to ISO for server
+    const startDate = new Date(`${slotData.date}T${slotData.start_time}:00`);
+    const endDate = new Date(`${slotData.date}T${slotData.end_time}:00`);
+    
+    // Validate that the dates are valid
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      this.adminSlotForm.setCreating(false);
+      this.errorMessageService.showError('Invalid date or time format');
+      return;
+    }
+    
+    // Validate that end time is after start time
+    if (endDate <= startDate) {
+      this.adminSlotForm.setCreating(false);
+      this.errorMessageService.showError('End time must be after start time');
+      return;
+    }
+    
+    // Convert to ISO string which includes timezone offset
+    const startDateTime = startDate.toISOString();
+    const endDateTime = endDate.toISOString();
+
+    const timeSlotPayload = {
+      category: slotData.category,
+      start_time: startDateTime,
+      end_time: endDateTime
+    };
+
+    this.apiService.createTimeSlot(timeSlotPayload).subscribe({
+      next: () => {
+        this.errorMessageService.showSuccess('Time slot created successfully!');
+        this.adminSlotForm.resetForm();
+        this.loadTimeSlots(); // Refresh slots
+      },
+      error: (error) => {
+        console.error('Failed to create time slot:', error);
+        this.adminSlotForm.setCreating(false);
+        
+        let errorMessage = 'Failed to create time slot. Please try again.';
+        if (error.error?.detail) {
+          errorMessage = error.error.detail;
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
+        this.errorMessageService.showError(errorMessage);
+      }
+    });
+  }
+
+  private deleteTimeSlot(slot: TimeSlot): void {
+    this.apiService.deleteTimeSlot(slot.id).subscribe({
+      next: () => {
+        this.errorMessageService.showSuccess('Time slot deleted successfully!');
+        this.loadTimeSlots(); // Refresh slots
+      },
+      error: (error) => {
+        console.error('Failed to delete time slot:', error);
+        
+        let errorMessage = 'Failed to delete time slot. Please try again.';
+        if (error.error?.detail) {
+          errorMessage = error.error.detail;
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
+        this.errorMessageService.showError(errorMessage);
+      }
+    });
   }
 
   private createBooking(slot: TimeSlot): void {

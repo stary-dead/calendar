@@ -1,4 +1,10 @@
 <div class="calendar-container">
+  <!-- Admin Slot Creation Form -->
+  <app-admin-slot-form 
+    *ngIf="isAdmin"
+    (createSlot)="onCreateSlot($event)">
+  </app-admin-slot-form>
+
   <!-- Category Filter Section -->
   <mat-card class="filter-card">
     <mat-card-header>
@@ -79,6 +85,7 @@
                       class="time-slot-card"
                       [ngClass]="getSlotClass(slot)"
                       (click)="onSlotClick(slot)"
+                      (contextmenu)="onSlotRightClick($event, slot)"
                       [matTooltip]="getSlotTooltip(slot)"
                       matTooltipPosition="above">
                       

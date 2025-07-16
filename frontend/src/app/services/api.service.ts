@@ -92,4 +92,11 @@ export class ApiService {
       withCredentials: true
     });
   }
+
+  // Get detailed booking information for a time slot (admin only)
+  getTimeSlotBookingDetails(timeSlotId: number): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/api/admin/timeslots/${timeSlotId}/booking-details/`, {
+      withCredentials: true
+    });
+  }
 }
