@@ -51,20 +51,6 @@ export class ApiService {
     });
   }
 
-  // User Preferences
-  getUserPreferences(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/api/user/preferences/`, {
-      withCredentials: true
-    });
-  }
-
-  updateUserPreferences(preferences: any): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/user/preferences/`, preferences, {
-      headers: this.csrfService.getHeaders(),
-      withCredentials: true
-    });
-  }
-
   // Categories
   getCategories(): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/api/categories/`, {
@@ -88,6 +74,14 @@ export class ApiService {
 
   deleteTimeSlot(timeSlotId: number): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/api/admin/timeslots/${timeSlotId}/`, {
+      headers: this.csrfService.getHeaders(),
+      withCredentials: true
+    });
+  }
+
+  // Admin cancel any booking
+  adminCancelBooking(bookingId: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/api/admin/bookings/${bookingId}/`, {
       headers: this.csrfService.getHeaders(),
       withCredentials: true
     });

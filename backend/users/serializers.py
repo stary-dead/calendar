@@ -118,32 +118,34 @@ class AdminTimeSlotCreateSerializer(serializers.ModelSerializer):
         fields = ['category', 'start_time', 'end_time']
     
     def validate(self, data):
-        """Validate time slot data"""
+        from django.utils import timezone
         start_time = data.get('start_time')
         end_time = data.get('end_time')
+        category = data.get('category')
         
         if start_time and end_time:
             if start_time >= end_time:
-                raise serializers.ValidationError(
-                    "Start time must be before end time"
-                )
-            
-            # Check for overlapping slots (excluding current instance during update)
+                raise serializers.ValidationError("Start time must be before end time")
+
+            duration = (end_time - start_time).total_seconds()
+            if duration < 900:
+                raise serializers.ValidationError("Time slot must be at least 15 minutes long")
+
+            if not self.instance and start_time < timezone.now():
+                raise serializers.ValidationError("Cannot create time slots in the past")
+
             queryset = TimeSlot.objects.filter(
                 start_time__lt=end_time,
-                end_time__gt=start_time
+                end_time__gt=start_time,
+                category=category
             )
-            
             if self.instance:
                 queryset = queryset.exclude(id=self.instance.id)
-            
-            if queryset.exists():
-                raise serializers.ValidationError(
-                    "Time slot overlaps with existing slot"
-                )
-        
-        return data
 
+            if queryset.exists():
+                raise serializers.ValidationError("Time slot overlaps with existing slot")
+
+        return data
 
 class AdminTimeSlotSerializer(serializers.ModelSerializer):
     """Detailed serializer for time slots with booking info (admin view)"""

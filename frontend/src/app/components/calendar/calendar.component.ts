@@ -261,16 +261,31 @@ export class CalendarComponent implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
 
-    this.confirmDialogService.confirm({
-      title: 'Delete Time Slot',
-      message: `Are you sure you want to delete this time slot?\n\nCategory: ${slot.category_name}\nTime: ${this.formatSlotTime(slot.start_time, slot.end_time)}\n\nThis action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel'
-    }).subscribe(confirmed => {
-      if (confirmed) {
-        this.deleteTimeSlot(slot);
-      }
-    });
+    if (slot.is_booked) {
+      // If slot is booked, show option to cancel booking and then delete
+      this.confirmDialogService.confirm({
+        title: 'Cancel Booking and Delete Time Slot',
+        message: `This time slot is booked by another user. Do you want to cancel the booking and delete the time slot?\n\nCategory: ${slot.category_name}\nTime: ${this.formatSlotTime(slot.start_time, slot.end_time)}\nBooked by: ${slot.booked_by}\n\nThis action cannot be undone.`,
+        confirmText: 'Cancel Booking & Delete',
+        cancelText: 'Cancel'
+      }).subscribe(confirmed => {
+        if (confirmed) {
+          this.adminCancelBookingAndDeleteSlot(slot);
+        }
+      });
+    } else {
+      // If slot is not booked, show regular delete option
+      this.confirmDialogService.confirm({
+        title: 'Delete Time Slot',
+        message: `Are you sure you want to delete this time slot?\n\nCategory: ${slot.category_name}\nTime: ${this.formatSlotTime(slot.start_time, slot.end_time)}\n\nThis action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }).subscribe(confirmed => {
+        if (confirmed) {
+          this.deleteTimeSlot(slot);
+        }
+      });
+    }
   }
 
   // Admin slot creation
@@ -280,14 +295,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Combine date and time to create DateTime strings with timezone
-    // Create dates in local timezone, then convert to ISO for server
-    const startDate = new Date(`${slotData.date}T${slotData.start_time}:00`);
-    const endDate = new Date(`${slotData.date}T${slotData.end_time}:00`);
+    // slotData already contains properly formatted DateTime strings
+    // Validate that the DateTime strings are valid
+    const startDate = new Date(slotData.start_time);
+    const endDate = new Date(slotData.end_time);
     
-    // Validate that the dates are valid
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       this.adminSlotForm.setCreating(false);
+      this.adminSlotForm.forceUpdateState();
       this.errorMessageService.showError('Invalid date or time format');
       return;
     }
@@ -295,18 +310,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // Validate that end time is after start time
     if (endDate <= startDate) {
       this.adminSlotForm.setCreating(false);
+      this.adminSlotForm.forceUpdateState();
       this.errorMessageService.showError('End time must be after start time');
       return;
     }
-    
-    // Convert to ISO string which includes timezone offset
-    const startDateTime = startDate.toISOString();
-    const endDateTime = endDate.toISOString();
 
     const timeSlotPayload = {
       category: slotData.category,
-      start_time: startDateTime,
-      end_time: endDateTime
+      start_time: slotData.start_time, // Already ISO string
+      end_time: slotData.end_time       // Already ISO string
     };
 
     this.apiService.createTimeSlot(timeSlotPayload).subscribe({
@@ -318,15 +330,48 @@ export class CalendarComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Failed to create time slot:', error);
         this.adminSlotForm.setCreating(false);
+        this.adminSlotForm.forceUpdateState();
         
         let errorMessage = 'Failed to create time slot. Please try again.';
-        if (error.error?.detail) {
-          errorMessage = error.error.detail;
-        } else if (error.error?.message) {
-          errorMessage = error.error.message;
+        
+        // Handle specific validation errors
+        if (error.error) {
+          // Handle DRF validation errors format
+          if (error.error.non_field_errors && Array.isArray(error.error.non_field_errors)) {
+            errorMessage = error.error.non_field_errors[0];
+          } else if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error.detail) {
+            errorMessage = error.error.detail;
+          } else if (error.error.message) {
+            errorMessage = error.error.message;
+          } else {
+            // Handle field-specific errors
+            const fieldErrors: string[] = [];
+            Object.keys(error.error).forEach(field => {
+              if (Array.isArray(error.error[field])) {
+                fieldErrors.push(`${field}: ${error.error[field][0]}`);
+              } else {
+                fieldErrors.push(`${field}: ${error.error[field]}`);
+              }
+            });
+            if (fieldErrors.length > 0) {
+              errorMessage = fieldErrors.join('; ');
+            }
+          }
         }
         
-        this.errorMessageService.showError(errorMessage);
+        // Translate common server error messages to user-friendly text
+        if (errorMessage.includes('Time slot overlaps with existing slot')) {
+          errorMessage = 'This time slot overlaps with an existing time slot for the same category. Please choose a different time.';
+        } else if (errorMessage.includes('Start time must be before end time')) {
+          errorMessage = 'Start time must be before end time. Please check your time selection.';
+        }
+        
+        // Ensure error message is shown after state update
+        setTimeout(() => {
+          this.errorMessageService.showError(errorMessage);
+        }, 0);
       }
     });
   }
@@ -341,13 +386,87 @@ export class CalendarComponent implements OnInit, OnDestroy {
         console.error('Failed to delete time slot:', error);
         
         let errorMessage = 'Failed to delete time slot. Please try again.';
-        if (error.error?.detail) {
-          errorMessage = error.error.detail;
-        } else if (error.error?.message) {
-          errorMessage = error.error.message;
+        
+        // Handle specific error responses
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error.error) {
+            errorMessage = error.error.error;
+          } else if (error.error.detail) {
+            errorMessage = error.error.detail;
+          } else if (error.error.message) {
+            errorMessage = error.error.message;
+          }
+        }
+        
+        // Translate common server error messages to user-friendly text
+        if (errorMessage.includes('Cannot delete booked time slot')) {
+          errorMessage = 'Cannot delete this time slot because it is already booked by a user. Please cancel the booking first.';
         }
         
         this.errorMessageService.showError(errorMessage);
+      }
+    });
+  }
+
+  private adminCancelBookingAndDeleteSlot(slot: TimeSlot): void {
+    // For admin operations, we need to get booking details from the admin API
+    // since regular users don't have access to other users' booking IDs
+    
+    console.log('Admin trying to cancel booking and delete slot:', slot);
+    
+    // Use the admin API to get all bookings and find the one for this slot
+    this.apiService.getAllBookings().subscribe({
+      next: (bookings: any[]) => {
+        console.log('All bookings received:', bookings);
+        console.log('Looking for booking with time_slot.id:', slot.id);
+        
+        const booking = bookings.find((b: any) => {
+          console.log('Checking booking:', b, 'time_slot_info:', b.time_slot_info);
+          return b.time_slot_info?.id === slot.id;
+        });
+        
+        console.log('Found booking:', booking);
+        
+        if (!booking) {
+          console.log('No booking found for slot', slot.id, 'attempting direct delete');
+          // If no booking found, just try to delete the slot
+          this.deleteTimeSlot(slot);
+          return;
+        }
+
+        console.log('Step 1: Cancelling booking with ID:', booking.id);
+        // Step 1: Cancel the booking using admin endpoint
+        this.apiService.adminCancelBooking(booking.id).subscribe({
+          next: () => {
+            console.log('Step 2: Booking cancelled successfully, now deleting slot');
+            // Step 2: After successful booking cancellation, delete the time slot
+            this.deleteTimeSlot(slot);
+          },
+          error: (error) => {
+            console.error('Failed to cancel booking:', error);
+            
+            let errorMessage = 'Failed to cancel booking. Please try again.';
+            if (error.error) {
+              if (typeof error.error === 'string') {
+                errorMessage = error.error;
+              } else if (error.error.error) {
+                errorMessage = error.error.error;
+              } else if (error.error.detail) {
+                errorMessage = error.error.detail;
+              } else if (error.error.message) {
+                errorMessage = error.error.message;
+              }
+            }
+            
+            this.errorMessageService.showError(errorMessage);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Failed to get bookings:', error);
+        this.errorMessageService.showError('Failed to get booking information. Please try again.');
       }
     });
   }
@@ -366,7 +485,32 @@ export class CalendarComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Failed to create booking:', error);
-            this.errorMessageService.showError('Failed to create booking. Please try again.');
+            
+            let errorMessage = 'Failed to create booking. Please try again.';
+            
+            // Handle specific error responses
+            if (error.error) {
+              if (typeof error.error === 'string') {
+                errorMessage = error.error;
+              } else if (error.error.detail) {
+                errorMessage = error.error.detail;
+              } else if (error.error.message) {
+                errorMessage = error.error.message;
+              } else if (error.error.time_slot && Array.isArray(error.error.time_slot)) {
+                errorMessage = error.error.time_slot[0];
+              }
+            }
+            
+            // Translate common server error messages to user-friendly text
+            if (errorMessage.includes('Time slot is already booked')) {
+              errorMessage = 'This time slot has already been booked by another user.';
+            } else if (errorMessage.includes('Time slot has passed')) {
+              errorMessage = 'This time slot has already passed and cannot be booked.';
+            } else if (errorMessage.includes('You already have a booking')) {
+              errorMessage = 'You already have a booking at this time.';
+            }
+            
+            this.errorMessageService.showError(errorMessage);
           }
         });
       }
@@ -389,7 +533,30 @@ export class CalendarComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Failed to cancel booking:', error);
-            this.errorMessageService.showError('Failed to cancel booking. Please try again.');
+            
+            let errorMessage = 'Failed to cancel booking. Please try again.';
+            
+            // Handle specific error responses
+            if (error.error) {
+              if (typeof error.error === 'string') {
+                errorMessage = error.error;
+              } else if (error.error.detail) {
+                errorMessage = error.error.detail;
+              } else if (error.error.message) {
+                errorMessage = error.error.message;
+              } else if (error.error.error) {
+                errorMessage = error.error.error;
+              }
+            }
+            
+            // Translate common server error messages to user-friendly text
+            if (errorMessage.includes('too late to cancel')) {
+              errorMessage = 'It is too late to cancel this booking. Cancellation must be done at least 1 hour before the scheduled time.';
+            } else if (errorMessage.includes('Booking not found')) {
+              errorMessage = 'This booking no longer exists or has already been cancelled.';
+            }
+            
+            this.errorMessageService.showError(errorMessage);
           }
         });
       }

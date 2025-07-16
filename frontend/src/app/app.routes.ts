@@ -31,25 +31,6 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'admin',
-    canActivate: [AdminGuard],
-    children: [
-      {
-        path: '',
-        redirectTo: 'timeslots',
-        pathMatch: 'full'
-      },
-      {
-        path: 'timeslots',
-        loadComponent: () => import('./components/admin/timeslots/timeslots.component').then(m => m.TimeslotsComponent)
-      },
-      {
-        path: 'bookings',
-        loadComponent: () => import('./components/admin/bookings/bookings.component').then(m => m.BookingsComponent)
-      }
-    ]
-  },
-  {
     path: '**',
     redirectTo: '/login'
   }

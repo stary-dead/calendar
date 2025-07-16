@@ -339,3 +339,6 @@ SOCIALACCOUNT_PROVIDERS['github']['APP'] = {
     'client_id': config('GITHUB_OAUTH_CLIENT_ID', default=''),
     'secret': config('GITHUB_OAUTH_CLIENT_SECRET', default=''),
 }
+
+USE_TZ = True
+TIME_ZONE = 'Europe/Warsaw'

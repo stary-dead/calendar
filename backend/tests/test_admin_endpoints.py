@@ -85,6 +85,7 @@ class AdminTimeslotsListCreateTest(BaseAPITestCase):
         self.authenticate_admin()
         url = reverse('admin_timeslots_list_create')
         
+        # Use the same date calculation as in the base setup
         filter_date = (timezone.now() + timedelta(days=1)).date()
         response = self.client.get(url, {'date': filter_date.strftime('%Y-%m-%d')})
         

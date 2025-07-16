@@ -97,6 +97,10 @@ export interface CategorySelection {
       line-height: 24px;
     }
 
+    .category-chip .mat-mdc-chip-action-label {
+      color: inherit !important;
+    }
+
     .selected-info {
       margin-top: 12px;
       text-align: center;

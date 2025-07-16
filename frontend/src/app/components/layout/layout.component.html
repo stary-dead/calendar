@@ -1,9 +1,9 @@
 <div class="layout-container">
   <!-- Header -->
   <mat-toolbar color="primary" class="header">
-    <button mat-icon-button (click)="toggleMenu()" class="menu-button">
+    <!-- <button mat-icon-button (click)="toggleMenu()" class="menu-button">
       <mat-icon>menu</mat-icon>
-    </button>
+    </button> -->
     
     <span class="title">Calendar Event Booking</span>
     
@@ -29,7 +29,7 @@
 
   <!-- Sidebar Navigation -->
   <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav 
+    <!-- <mat-sidenav 
       #drawer 
       class="sidenav" 
       [mode]="'over'"
@@ -38,7 +38,6 @@
       
       <div class="sidenav-content">
         <div class="nav-section" *ngIf="currentUser$ | async as user">
-          <!-- User Navigation -->
           <h3 class="nav-section-title">User Menu</h3>
           
           <a mat-list-item 
@@ -48,31 +47,9 @@
             <mat-icon matListItemIcon>calendar_today</mat-icon>
             <span matListItemTitle>Calendar</span>
           </a>
-
-          <!-- Admin Navigation -->
-          <div *ngIf="isAdminUser(user)" class="admin-section">
-            <mat-divider class="section-divider"></mat-divider>
-            <h3 class="nav-section-title">Admin Menu</h3>
-            
-            <a mat-list-item 
-               routerLink="/admin/timeslots" 
-               routerLinkActive="active-link"
-               (click)="toggleMenu()">
-              <mat-icon matListItemIcon>schedule</mat-icon>
-              <span matListItemTitle>Manage Time Slots</span>
-            </a>
-            
-            <a mat-list-item 
-               routerLink="/admin/bookings" 
-               routerLinkActive="active-link"
-               (click)="toggleMenu()">
-              <mat-icon matListItemIcon>bookmark</mat-icon>
-              <span matListItemTitle>View Bookings</span>
-            </a>
-          </div>
         </div>
       </div>
-    </mat-sidenav>
+    </mat-sidenav> -->
 
     <!-- Main Content -->
     <mat-sidenav-content class="main-content">

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { MaterialModule } from '../../material.module';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models';
@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MaterialModule],
+  imports: [CommonModule, RouterOutlet,  MaterialModule],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss']
 })
