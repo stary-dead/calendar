@@ -104,19 +104,22 @@ export class BookingService {
     categories?: string[];
     available_only?: boolean;
   }): Observable<TimeSlot[]> {
-    let params: any = {};
+    let params = new URLSearchParams();
     
     if (filters) {
-      if (filters.date) params.date = filters.date;
-      if (filters.start_date) params.start_date = filters.start_date;
-      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.date) params.append('date', filters.date);
+      if (filters.start_date) params.append('start_date', filters.start_date);
+      if (filters.end_date) params.append('end_date', filters.end_date);
       if (filters.categories && filters.categories.length > 0) {
-        params.categories = filters.categories.join(',');
+        // Передаём каждую категорию как отдельный параметр categories
+        filters.categories.forEach(category => {
+          params.append('categories', category);
+        });
       }
-      if (filters.available_only) params.available_only = 'true';
+      if (filters.available_only) params.append('available_only', 'true');
     }
 
-    return this.http.get<TimeSlot[]>(`${environment.apiUrl}/api/timeslots/`, { params, withCredentials: true });
+    return this.http.get<TimeSlot[]>(`${environment.apiUrl}/api/timeslots/?${params.toString()}`, { withCredentials: true });
   }
 
   /**

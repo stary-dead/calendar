@@ -132,8 +132,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // Category-based styling
     classes.push(`category-${slot.category_name.toLowerCase().replace(' ', '')}`);
     
-    // Booking status styling
-    if (slot.is_booked) {
+    // Check if slot is expired (past time)
+    const now = new Date();
+    const slotStart = new Date(slot.start_time);
+    const isExpired = slotStart < now;
+    
+    // Status-based styling
+    if (isExpired) {
+      classes.push('slot-expired');
+    } else if (slot.is_booked) {
       classes.push('slot-booked');
       if (this.isMyBooking(slot)) {
         classes.push('slot-my-booking');
@@ -150,7 +157,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
   getSlotTooltip(slot: TimeSlot): string {
     let tooltip = `${slot.category_name}\n${this.formatSlotTime(slot.start_time, slot.end_time)}`;
     
-    if (slot.is_booked) {
+    // Check if slot is expired (past time)
+    const now = new Date();
+    const slotStart = new Date(slot.start_time);
+    const isExpired = slotStart < now;
+    
+    if (isExpired) {
+      tooltip += '\n\nTime has expired - Cannot book';
+    } else if (slot.is_booked) {
       if (this.isMyBooking(slot)) {
         tooltip += '\n\nYour booking - Click to cancel';
       } else {
@@ -175,6 +189,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
   }
 
   canInteractWithSlot(slot: TimeSlot): boolean {
+    // Check if slot is expired (past time)
+    const now = new Date();
+    const slotStart = new Date(slot.start_time);
+    const isExpired = slotStart < now;
+    
+    if (isExpired) {
+      return false; // Cannot interact with expired slots
+    }
+    
     return (slot.can_book && !slot.is_booked) || this.isMyBooking(slot);
   }
 
@@ -182,8 +205,24 @@ export class CalendarComponent implements OnInit, OnDestroy {
     return this.bookingService.isTimeSlotBookedByUser(slot.id);
   }
 
+  isSlotExpired(slot: TimeSlot): boolean {
+    const now = new Date();
+    const slotStart = new Date(slot.start_time);
+    return slotStart < now;
+  }
+
   // Slot interaction
   onSlotClick(slot: TimeSlot): void {
+    // Check if slot is expired (past time)
+    const now = new Date();
+    const slotStart = new Date(slot.start_time);
+    const isExpired = slotStart < now;
+    
+    if (isExpired) {
+      this.errorMessageService.showError('This time slot has expired and cannot be booked or cancelled.');
+      return;
+    }
+    
     if (!this.canInteractWithSlot(slot)) {
       return;
     }

@@ -82,8 +82,16 @@
                       [matTooltip]="getSlotTooltip(slot)"
                       matTooltipPosition="above">
                       
-                      <div class="slot-time">
-                        {{ formatSlotTime(slot.start_time, slot.end_time) }}
+                      <div class="slot-header">
+                        <div class="slot-time">
+                          {{ formatSlotTime(slot.start_time, slot.end_time) }}
+                        </div>
+                        
+                        <!-- Actions in top-right corner -->
+                        <div class="slot-actions" *ngIf="canInteractWithSlot(slot) && !isSlotExpired(slot)">
+                          <mat-icon *ngIf="!slot.is_booked">add_circle</mat-icon>
+                          <mat-icon *ngIf="slot.is_booked && isMyBooking(slot)">cancel</mat-icon>
+                        </div>
                       </div>
                       
                       <div class="slot-category">
@@ -99,9 +107,9 @@
                         <span class="booked-text">Booked</span>
                       </div>
                       
-                      <div class="slot-actions" *ngIf="canInteractWithSlot(slot)">
-                        <mat-icon *ngIf="!slot.is_booked">add_circle</mat-icon>
-                        <mat-icon *ngIf="slot.is_booked && isMyBooking(slot)">cancel</mat-icon>
+                      <div class="slot-status" *ngIf="isSlotExpired(slot)">
+                        <mat-icon class="expired-icon">schedule</mat-icon>
+                        <span class="expired-text">Expired</span>
                       </div>
                     </mat-card>
                   </div>

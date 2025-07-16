@@ -13,7 +13,9 @@ export class ConfirmDialogService {
     const dialogRef: MatDialogRef<ConfirmDialogComponent> = this.dialog.open(
       ConfirmDialogComponent,
       {
-        width: '400px',
+        minWidth: '400px',
+        maxWidth: '600px',
+        autoFocus: false,
         disableClose: true,
         data: data
       }

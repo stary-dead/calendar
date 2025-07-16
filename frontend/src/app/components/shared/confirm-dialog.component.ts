@@ -26,7 +26,7 @@ export interface ConfirmDialogData {
       </h2>
       
       <mat-dialog-content class="dialog-content">
-        <p>{{ data.message }}</p>
+        <p [innerHTML]="formatMessage(data.message)"></p>
       </mat-dialog-content>
       
       <mat-dialog-actions class="dialog-actions">
@@ -48,14 +48,20 @@ export interface ConfirmDialogData {
   `,
   styles: [`
     .confirm-dialog {
-      min-width: 300px;
-      max-width: 500px;
+      min-width: 400px;
+      max-width: 600px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
     }
 
     .dialog-title {
       display: flex;
       align-items: center;
       margin-bottom: 0;
+      padding: 8px 0;
+      flex-shrink: 0;
     }
 
     .dialog-icon {
@@ -64,25 +70,46 @@ export interface ConfirmDialogData {
     }
 
     .dialog-content {
-      margin: 16px 0;
+      margin: 8px 0;
+      padding: 8px 0;
+      flex: 1;
+      overflow: visible;
     }
 
     .dialog-content p {
       margin: 0;
       line-height: 1.5;
       color: rgba(0, 0, 0, 0.8);
+      word-wrap: break-word;
     }
 
     .dialog-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
-      margin-top: 16px;
-      padding: 16px 0 0 0;
+      margin-top: 8px;
+      padding: 8px 0 0 0;
+      flex-shrink: 0;
     }
 
     .cancel-button {
       margin-right: 8px;
+    }
+
+    /* Ensure proper spacing in Material Dialog */
+    :host ::ng-deep .mat-mdc-dialog-container {
+      padding: 24px !important;
+    }
+
+    :host ::ng-deep .mat-mdc-dialog-content {
+      margin: 0 !important;
+      padding: 0 !important;
+      max-height: none !important;
+    }
+
+    :host ::ng-deep .mat-mdc-dialog-actions {
+      margin: 0 !important;
+      padding: 0 !important;
     }
   `]
 })
@@ -98,5 +125,10 @@ export class ConfirmDialogComponent {
 
   onConfirm(): void {
     this.dialogRef.close(true);
+  }
+
+  formatMessage(message: string): string {
+    // Convert newlines to HTML breaks for better display
+    return message.replace(/\n/g, '<br>');
   }
 }

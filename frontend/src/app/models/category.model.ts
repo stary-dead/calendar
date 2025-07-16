@@ -6,7 +6,7 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 1, name: 'Cat 1', code: 'cat1', color: '#2196F3' },
-  { id: 2, name: 'Cat 2', code: 'cat2', color: '#4CAF50' },
-  { id: 3, name: 'Cat 3', code: 'cat3', color: '#FF9800' }
+  { id: 1, name: 'Cat 1', code: 'cat1', color: '#3f51b5' },
+  { id: 2, name: 'Cat 2', code: 'cat2', color: '#ff4081' },
+  { id: 3, name: 'Cat 3', code: 'cat3', color: '#ff9800' }
 ];
