@@ -40,9 +40,9 @@ export interface CreateSlotData {
 
             <mat-form-field appearance="outline">
               <mat-label>Date</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="date" required [min]="minDateObj" readonly (click)="picker.open()">
+              <input matInput [matDatepicker]="picker" formControlName="date" required [min]="minDateObj" (click)="picker.open()">
               <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker></mat-datepicker>
+              <mat-datepicker #picker (dateChange)="onDateChange($event)"></mat-datepicker>
               <mat-error *ngIf="slotForm.get('date')?.invalid && slotForm.get('date')?.touched">
                 Date is required
               </mat-error>
@@ -201,6 +201,12 @@ export class AdminSlotFormComponent {
       end_time: ['', Validators.required]
     }, { validators: this.timeOrderValidator });
     
+    // Subscribe to date changes to trigger change detection
+    this.slotForm.get('date')?.valueChanges.subscribe(date => {
+      this.cdr.detectChanges();
+      this.cdr.markForCheck();
+    });
+    
     // Subscribe to start_time changes to filter end_time options
     this.slotForm.get('start_time')?.valueChanges.subscribe(startTime => {
       console.log('Start time changed:', typeof startTime, startTime);
@@ -288,6 +294,12 @@ export class AdminSlotFormComponent {
       return timeMinutes < endMinutes;
     });
     this.cdr.detectChanges();
+  }
+
+  onDateChange(event: any): void {
+    // Force change detection when date is selected
+    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
