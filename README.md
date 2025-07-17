@@ -364,6 +364,21 @@ The application follows a modern microservices architecture:
 - Database layer with proper normalization
 - Containerized deployment for scalability
 
+## 📄 License
+
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
+
+**Important**: This software is **NOT** licensed for commercial use. You are free to:
+- Use, copy, and distribute the software for non-commercial purposes
+- Modify and create derivative works for personal or educational use
+- Share the software with proper attribution
+
+**Commercial use is strictly prohibited** without explicit written permission from the copyright holder.
+
+For commercial licensing inquiries, please contact the project maintainer.
+
+See the [LICENSE](LICENSE) file for the complete license terms.
+
 ---
 
 **Note**: This is a demonstration project showcasing modern web development practices and real-time application features.
