@@ -28,8 +28,8 @@ export interface CreateSlotData {
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>Category</mat-label>
-              <mat-select formControlName="category" required>
-                <mat-option *ngFor="let category of categories" [value]="category.id">
+              <mat-select #category_select formControlName="category" required>
+                <mat-option *ngFor="let category of categories" [value]="category.id" (click)="category_select.close()">
                   {{ category.name }}
                 </mat-option>
               </mat-select>
@@ -263,6 +263,7 @@ export class AdminSlotFormComponent {
   private updateAvailableEndTimes(startTime: string): void {
     if (!startTime) {
       this.availableEndTimes = [...this.timeSlots];
+      this.cdr.detectChanges();
       return;
     }
     
@@ -271,11 +272,13 @@ export class AdminSlotFormComponent {
       const timeMinutes = this.timeToMinutes(time);
       return timeMinutes > startMinutes;
     });
+    this.cdr.detectChanges();
   }
 
   private updateAvailableStartTimes(endTime: string): void {
     if (!endTime) {
       this.availableStartTimes = [...this.timeSlots];
+      this.cdr.detectChanges();
       return;
     }
     
@@ -284,6 +287,7 @@ export class AdminSlotFormComponent {
       const timeMinutes = this.timeToMinutes(time);
       return timeMinutes < endMinutes;
     });
+    this.cdr.detectChanges();
   }
 
   onSubmit(): void {
@@ -333,10 +337,24 @@ export class AdminSlotFormComponent {
 
   resetForm(): void {
     this.slotForm.reset();
+    this.slotForm.markAsUntouched();
+    this.slotForm.markAsPristine();
+    
+    // Reset individual form controls
+    Object.keys(this.slotForm.controls).forEach(key => {
+      const control = this.slotForm.get(key);
+      if (control) {
+        control.markAsUntouched();
+        control.markAsPristine();
+        control.setErrors(null);
+      }
+    });
+    
     this.isCreating = false;
     // Reset available time slots
     this.availableStartTimes = [...this.timeSlots];
     this.availableEndTimes = [...this.timeSlots];
+    this.cdr.detectChanges();
   }
 
   setCreating(creating: boolean): void {

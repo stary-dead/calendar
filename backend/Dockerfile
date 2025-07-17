@@ -27,4 +27,4 @@ RUN python manage.py collectstatic --noinput --clear || true
 EXPOSE 8000
 
 
-CMD ["sh", "-c", "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 calendar_project.asgi:application"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py create_initial_data && daphne -b 0.0.0.0 -p 8000 calendar_project.asgi:application"]
